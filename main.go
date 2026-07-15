@@ -51,6 +51,7 @@ func main() {
 	//call the config method functions if an http request is made to /metrics or /reset
 	serverMux.HandleFunc("GET /admin/metrics", apiCfg.metrics)
 	serverMux.HandleFunc("POST /admin/reset", apiCfg.reset)
+	serverMux.HandleFunc("POST /api/validate_chirp", handlerChirpsValidate)
 	// Serve files from current directory.
 	fileServer := http.FileServer(http.Dir("."))
 	// Remove "/app" from URL before file lookup.
