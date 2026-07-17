@@ -1,16 +1,23 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 	"sync/atomic"
+
+	"github.com/Johnnydeeps/chirpy/internal/database"
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 type apiConfig struct {
 	fileserverHits atomic.Int32
+	databasePtr    *database.Queries
+	platform       string
 }
-
-var apiCfg = &apiConfig{}
 
 func (configPtr *apiConfig) middlewareMetricsINC(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
@@ -23,14 +30,7 @@ func (configPtr *apiConfig) metrics(response http.ResponseWriter, request *http.
 	count := configPtr.fileserverHits.Load()
 	response.Header().Set("Content-Type", "text/html")
 	response.WriteHeader(http.StatusOK)
-	response.Write([]byte(fmt.Sprintf("<html><body><h1>Welcome, Chirpy Admin</h1><p>Chirpy has been visited %d times!</p></body></html>", count))) // ignore
-}
-
-func (configPtr *apiConfig) reset(response http.ResponseWriter, request *http.Request) {
-	configPtr.fileserverHits.Store(0)
-	response.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	response.WriteHeader(http.StatusOK)
-	response.Write([]byte("Count reset to 0"))
+	response.Write(fmt.Appendf(nil, "<html><body><h1>Welcome, Chirpy Admin</h1><p>Chirpy has been visited %d times!</p></body></html>", count)) // ignore
 }
 
 // custom handler function (not object like for fileserver) that writes an http response as
@@ -42,6 +42,24 @@ func healthz(response http.ResponseWriter, request *http.Request) {
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	
+	dbURL := os.Getenv("DB_URL")
+	platform := os.Getenv("PLATFORM")
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	dbQueries := database.New(db)
+
+	apiCfg := &apiConfig{
+		databasePtr: dbQueries,
+		platform:    platform,
+	}
+
 	// Route requests by path.
 	serverMux := http.NewServeMux()
 
@@ -52,6 +70,7 @@ func main() {
 	serverMux.HandleFunc("GET /admin/metrics", apiCfg.metrics)
 	serverMux.HandleFunc("POST /admin/reset", apiCfg.reset)
 	serverMux.HandleFunc("POST /api/validate_chirp", handlerChirpsValidate)
+	serverMux.HandleFunc("POST /api/users", apiCfg.handlerCreateUser)
 	// Serve files from current directory.
 	fileServer := http.FileServer(http.Dir("."))
 	// Remove "/app" from URL before file lookup.
