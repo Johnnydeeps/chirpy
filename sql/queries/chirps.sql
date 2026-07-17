@@ -13,3 +13,8 @@ RETURNING *;
 select *
 from chirps
 order by created_at ASC;
+
+-- name: GetChirpByID :one
+select *
+from chirps
+where chirps.id = $1;

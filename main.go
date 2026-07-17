@@ -73,6 +73,7 @@ func main() {
 	serverMux.HandleFunc("POST /api/users", apiCfg.handlerCreateUser)
 	serverMux.HandleFunc("POST /api/chirps", apiCfg.handlerCreateChirp)
 	serverMux.HandleFunc("GET /api/chirps", apiCfg.handlerGetAllChirps)
+	serverMux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.handlerGetChirpByID)
 	// Serve files from current directory.
 	fileServer := http.FileServer(http.Dir("."))
 	// Remove "/app" from URL before file lookup.
