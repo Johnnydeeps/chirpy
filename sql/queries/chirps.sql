@@ -8,3 +8,8 @@ VALUES (
     $5
 )
 RETURNING *;
+
+-- name: GetAllChirps :many
+select *
+from chirps
+order by created_at ASC;
