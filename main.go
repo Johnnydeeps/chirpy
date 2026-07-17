@@ -46,7 +46,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	
+
 	dbURL := os.Getenv("DB_URL")
 	platform := os.Getenv("PLATFORM")
 	db, err := sql.Open("postgres", dbURL)
@@ -71,6 +71,7 @@ func main() {
 	serverMux.HandleFunc("POST /admin/reset", apiCfg.reset)
 	serverMux.HandleFunc("POST /api/validate_chirp", handlerChirpsValidate)
 	serverMux.HandleFunc("POST /api/users", apiCfg.handlerCreateUser)
+	serverMux.HandleFunc("POST /api/chirps", apiCfg.handlerCreateChirp)
 	// Serve files from current directory.
 	fileServer := http.FileServer(http.Dir("."))
 	// Remove "/app" from URL before file lookup.
