@@ -5,12 +5,14 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Johnnydeeps/chirpy/internal/auth"
 	"github.com/Johnnydeeps/chirpy/internal/database"
 	"github.com/google/uuid"
 )
 
-type parameters struct {
-	Email string `json:"email"`
+type parametersUserJSON struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 type User struct {
@@ -18,10 +20,12 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Email     string    `json:"email"`
+	// `json:"-"` the dash json tag flags this feild to be skipped when encoding a json response.
+	HashedPassword string `json:"-"`
 }
 
 func (configPtr *apiConfig) handlerCreateUser(response http.ResponseWriter, request *http.Request) {
-	params := parameters{}
+	params := parametersUserJSON{}
 	decoder := json.NewDecoder(request.Body)
 	err := decoder.Decode(&params)
 	if err != nil {
@@ -29,11 +33,18 @@ func (configPtr *apiConfig) handlerCreateUser(response http.ResponseWriter, requ
 		return
 	}
 
+	hashedPassword, err := auth.HashPassword(params.Password)
+	if err != nil {
+		respondwithError(response, 500, "Error hashing password", err)
+		return
+	}
+
 	user, err := configPtr.databasePtr.CreateUser(request.Context(), database.CreateUserParams{
-		ID:        uuid.New(),
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-		Email:     params.Email,
+		ID:             uuid.New(),
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+		Email:          params.Email,
+		HashedPassword: hashedPassword,
 	})
 	if err != nil {
 		respondwithError(response, 500, "Error creating user in database", err)
