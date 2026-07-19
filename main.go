@@ -17,6 +17,7 @@ type apiConfig struct {
 	fileserverHits atomic.Int32
 	databasePtr    *database.Queries
 	platform       string
+	secretKey      string
 }
 
 func (configPtr *apiConfig) middlewareMetricsINC(next http.Handler) http.Handler {
@@ -49,6 +50,7 @@ func main() {
 
 	dbURL := os.Getenv("DB_URL")
 	platform := os.Getenv("PLATFORM")
+	secretKey := os.Getenv("JWT_SECRET_KEY")
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Fatal(err)
@@ -58,6 +60,7 @@ func main() {
 	apiCfg := &apiConfig{
 		databasePtr: dbQueries,
 		platform:    platform,
+		secretKey:   secretKey,
 	}
 
 	// Route requests by path.

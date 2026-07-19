@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Johnnydeeps/chirpy/internal/auth"
 	"github.com/Johnnydeeps/chirpy/internal/database"
 	"github.com/google/uuid"
 )
@@ -27,15 +28,28 @@ func (configPtr *apiConfig) handlerCreateChirp(response http.ResponseWriter, req
 	decoder := json.NewDecoder(request.Body)
 	err := decoder.Decode(&paramsChirp)
 	if err != nil {
-		respondwithError(response, 500, "Error decoding JSON", err)
+		respondwithError(response, 400, "Bad Resquest: Error decoding JSON", err)
 		return
 	}
+
+	token, err := auth.GetBearerToken(request.Header)
+	if err != nil {
+		respondwithError(response, 401, "Unauthorized", err)
+		return
+	}
+
+	userID, err := auth.ValidateJWT(token, configPtr.secretKey)
+	if err != nil {
+		respondwithError(response, 401, "Unauthorized", err)
+		return
+	}
+
 	chirp, err := configPtr.databasePtr.CreateChirp(request.Context(), database.CreateChirpParams{
 		ID:        uuid.New(),
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 		Body:      paramsChirp.Body,
-		UserID:    paramsChirp.UserID,
+		UserID:    userID,
 	})
 	if err != nil {
 		respondwithError(response, 500, "Error creating Chirp", err)

@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"net/http"
 	"testing"
 	"time"
 
@@ -60,5 +61,34 @@ func TestJWTWrongSecretToken(t *testing.T) {
 	_, err := ValidateJWT(token, "wrong-secret")
 	if err == nil {
 		t.Errorf("expected error for wrong secret, got none")
+	}
+}
+
+func TestGetBearerToken(t *testing.T) {
+	tests := []struct {
+		name      string
+		headerVal string
+		wantToken string
+		wantErr   bool
+	}{
+		{"valid", "Bearer abc123", "abc123", false},
+		{"missing", "", "", true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			headers := http.Header{}
+			if test.headerVal != "" {
+				headers.Set("Authorization", test.headerVal)
+			}
+			got, err := GetBearerToken(headers)
+			if (err != nil) != test.wantErr {
+				t.Errorf("wantErr %v, got err %v", test.wantErr, err)
+			}
+			if got != test.wantToken {
+				t.Errorf("want %q, got %q", test.wantToken, got)
+			}
+
+		})
 	}
 }
