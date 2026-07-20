@@ -18,6 +18,7 @@ type apiConfig struct {
 	databasePtr    *database.Queries
 	platform       string
 	secretKey      string
+	polkaKey       string
 }
 
 func (configPtr *apiConfig) middlewareMetricsINC(next http.Handler) http.Handler {
@@ -51,6 +52,7 @@ func main() {
 	dbURL := os.Getenv("DB_URL")
 	platform := os.Getenv("PLATFORM")
 	secretKey := os.Getenv("JWT_SECRET_KEY")
+	polkakey := os.Getenv("POLKA_KEY")
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Fatal(err)
@@ -63,6 +65,7 @@ func main() {
 		databasePtr: dbQueries,
 		platform:    platform,
 		secretKey:   secretKey,
+		polkaKey:    polkakey,
 	}
 	//***************************************************************************************
 

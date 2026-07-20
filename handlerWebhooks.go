@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/Johnnydeeps/chirpy/internal/auth"
 	"github.com/google/uuid"
 )
 
@@ -23,6 +24,16 @@ func (configPtr *apiConfig) handlerWebhooks(response http.ResponseWriter, reques
 	if err != nil {
 		respondwithError(response, 400, "Bad Resquest: Error decoding JSON", err)
 		return
+	}
+
+	//verify polka apikey from webhook request
+	apiKey, err := auth.GetAPIKey(request.Header)
+	if err != nil {
+		respondwithError(response, 401, "Apikey missing or malformed in request header", err)
+		return
+	}
+	if apiKey != configPtr.polkaKey {
+		response.WriteHeader(401)
 	}
 
 	if params.Event != "user.upgraded" {
