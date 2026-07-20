@@ -57,12 +57,14 @@ func main() {
 	}
 	dbQueries := database.New(db)
 	//***************************************************************************************
+
 	// config struct pointer for module reference.
 	apiCfg := &apiConfig{
 		databasePtr: dbQueries,
 		platform:    platform,
 		secretKey:   secretKey,
 	}
+	//***************************************************************************************
 
 	// Route requests by path.
 	serverMux := http.NewServeMux()
@@ -83,6 +85,7 @@ func main() {
 	serverMux.HandleFunc("POST /api/revoke", apiCfg.handlerRevokeRefreshToken)
 	serverMux.HandleFunc("PUT /api/users", apiCfg.handlerUpdateUser)
 	serverMux.HandleFunc("DELETE /api/chirps/{chirpID}", apiCfg.handlerDeleteChirp)
+	serverMux.HandleFunc("POST /api/polka/webhooks", apiCfg.handlerWebhooks)
 
 	// Serve files from current directory.
 	fileServer := http.FileServer(http.Dir("."))

@@ -22,3 +22,9 @@ update users
 set hashed_password = $1, email = $2, updated_at =$3
 where id = $4
 RETURNING *;
+
+-- name: UgradeUserRedChirp :one
+update users
+set is_chirpy_red = true
+where id = $1
+RETURNING *;

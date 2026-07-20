@@ -21,7 +21,7 @@ VALUES (
     $4,
     $5
 )
-RETURNING id, created_at, updated_at, email, hashed_password
+RETURNING id, created_at, updated_at, email, hashed_password, is_chirpy_red
 `
 
 type CreateUserParams struct {
@@ -47,12 +47,13 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.UpdatedAt,
 		&i.Email,
 		&i.HashedPassword,
+		&i.IsChirpyRed,
 	)
 	return i, err
 }
 
 const getUserByEmailLogin = `-- name: GetUserByEmailLogin :one
-select id, created_at, updated_at, email, hashed_password
+select id, created_at, updated_at, email, hashed_password, is_chirpy_red
 from users
 where email = $1
 `
@@ -66,6 +67,7 @@ func (q *Queries) GetUserByEmailLogin(ctx context.Context, email string) (User, 
 		&i.UpdatedAt,
 		&i.Email,
 		&i.HashedPassword,
+		&i.IsChirpyRed,
 	)
 	return i, err
 }
@@ -79,11 +81,32 @@ func (q *Queries) ResetAllUsers(ctx context.Context) error {
 	return err
 }
 
+const ugradeUserRedChirp = `-- name: UgradeUserRedChirp :one
+update users
+set is_chirpy_red = true
+where id = $1
+RETURNING id, created_at, updated_at, email, hashed_password, is_chirpy_red
+`
+
+func (q *Queries) UgradeUserRedChirp(ctx context.Context, id uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, ugradeUserRedChirp, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Email,
+		&i.HashedPassword,
+		&i.IsChirpyRed,
+	)
+	return i, err
+}
+
 const updateUserHashedPasswordOrEmail = `-- name: UpdateUserHashedPasswordOrEmail :one
 update users
 set hashed_password = $1, email = $2, updated_at =$3
 where id = $4
-RETURNING id, created_at, updated_at, email, hashed_password
+RETURNING id, created_at, updated_at, email, hashed_password, is_chirpy_red
 `
 
 type UpdateUserHashedPasswordOrEmailParams struct {
@@ -107,6 +130,7 @@ func (q *Queries) UpdateUserHashedPasswordOrEmail(ctx context.Context, arg Updat
 		&i.UpdatedAt,
 		&i.Email,
 		&i.HashedPassword,
+		&i.IsChirpyRed,
 	)
 	return i, err
 }

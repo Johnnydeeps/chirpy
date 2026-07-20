@@ -24,6 +24,7 @@ type User struct {
 	HashedPassword string `json:"-"`
 	Token          string `json:"token"`
 	RefreshToken   string `json:"refresh_token"`
+	IsChirpyRed    bool   `json:"is_chirpy_red"`
 }
 
 func (configPtr *apiConfig) handlerCreateUser(response http.ResponseWriter, request *http.Request) {
@@ -54,9 +55,10 @@ func (configPtr *apiConfig) handlerCreateUser(response http.ResponseWriter, requ
 	}
 
 	respondWithJSON(response, 201, User{
-		ID:        user.ID,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
-		Email:     user.Email,
+		ID:          user.ID,
+		CreatedAt:   user.CreatedAt,
+		UpdatedAt:   user.UpdatedAt,
+		Email:       user.Email,
+		IsChirpyRed: user.IsChirpyRed.Bool,
 	})
 }

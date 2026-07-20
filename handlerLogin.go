@@ -68,6 +68,7 @@ func (configPtr *apiConfig) handlerLogin(response http.ResponseWriter, request *
 		Email:        user.Email,
 		Token:        signedToken,
 		RefreshToken: storedRefreshToken.Token,
+		IsChirpyRed:  user.IsChirpyRed.Bool,
 	})
 
 }

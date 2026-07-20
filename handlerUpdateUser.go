@@ -23,6 +23,7 @@ type responseParametersUpdateUserJSON struct {
 	UpdatedAt      time.Time `json:"updated_at"`
 	Email          string    `json:"email"`
 	HashedPassword string    `json:"-"`
+	IsChirpyRed    bool      `json:"is_chirpy_red"`
 }
 
 func (configPtr *apiConfig) handlerUpdateUser(response http.ResponseWriter, request *http.Request) {
@@ -73,6 +74,7 @@ func (configPtr *apiConfig) handlerUpdateUser(response http.ResponseWriter, requ
 		UpdatedAt:      updatedUser.UpdatedAt,
 		Email:          updatedUser.Email,
 		HashedPassword: newHashedPassword,
+		IsChirpyRed:    updatedUser.IsChirpyRed.Bool,
 	})
 
 }
