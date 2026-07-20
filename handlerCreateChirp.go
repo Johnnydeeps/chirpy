@@ -31,7 +31,7 @@ func (configPtr *apiConfig) handlerCreateChirp(response http.ResponseWriter, req
 		respondwithError(response, 400, "Bad Resquest: Error decoding JSON", err)
 		return
 	}
-
+	// get JWT token from request.header
 	token, err := auth.GetBearerToken(request.Header)
 	if err != nil {
 		respondwithError(response, 401, "Unauthorized", err)

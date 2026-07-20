@@ -1,17 +1,18 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"time"
 
 	"github.com/Johnnydeeps/chirpy/internal/auth"
+	"github.com/Johnnydeeps/chirpy/internal/database"
 )
 
 type parametersLoginJSON struct {
-	Email            string `json:"email"`
-	Password         string `json:"password"`
-	ExpiresInSeconds int    `json:"expires_in_seconds"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 func (configPtr *apiConfig) handlerLogin(response http.ResponseWriter, request *http.Request) {
@@ -40,23 +41,33 @@ func (configPtr *apiConfig) handlerLogin(response http.ResponseWriter, request *
 	}
 
 	const maxExpiration = time.Hour
-	expiration := maxExpiration
-	if params.ExpiresInSeconds > 0 && time.Duration(params.ExpiresInSeconds)*time.Second < maxExpiration {
-		expiration = time.Duration(params.ExpiresInSeconds) * time.Second
-	}
 
-	signedToken, err := auth.MakeJWT(user.ID, configPtr.secretKey, expiration)
+	signedToken, err := auth.MakeJWT(user.ID, configPtr.secretKey, maxExpiration)
 	if err != nil {
 		respondwithError(response, 500, "Token Initialization Failure", err)
 		return
 	}
+	// create resfresh token expiration time of 60 days as time.Duration
+	const refreshTokenExpiration = time.Hour * 24 * 60
+
+	refreshToken := auth.MakeRefreshToken()
+
+	storedRefreshToken, err := configPtr.databasePtr.CreateRefresgToken(request.Context(), database.CreateRefresgTokenParams{
+		Token:     refreshToken,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		UserID:    user.ID,
+		ExpiresAt: time.Now().Add(refreshTokenExpiration),
+		RevokedAt: sql.NullTime{},
+	})
 
 	respondWithJSON(response, 200, User{
-		ID:        user.ID,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
-		Email:     user.Email,
-		Token:     signedToken,
+		ID:           user.ID,
+		CreatedAt:    user.CreatedAt,
+		UpdatedAt:    user.UpdatedAt,
+		Email:        user.Email,
+		Token:        signedToken,
+		RefreshToken: storedRefreshToken.Token,
 	})
 
 }

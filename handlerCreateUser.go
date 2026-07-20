@@ -23,6 +23,7 @@ type User struct {
 	// `json:"-"` the dash json tag flags this feild to be skipped when encoding a json response.
 	HashedPassword string `json:"-"`
 	Token          string `json:"token"`
+	RefreshToken   string `json:"refresh_token"`
 }
 
 func (configPtr *apiConfig) handlerCreateUser(response http.ResponseWriter, request *http.Request) {
