@@ -43,11 +43,11 @@ func healthz(response http.ResponseWriter, request *http.Request) {
 }
 
 func main() {
+	// load and assign .env values to be stored in api config struct for the module.
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-
 	dbURL := os.Getenv("DB_URL")
 	platform := os.Getenv("PLATFORM")
 	secretKey := os.Getenv("JWT_SECRET_KEY")
@@ -56,7 +56,8 @@ func main() {
 		log.Fatal(err)
 	}
 	dbQueries := database.New(db)
-
+	//***************************************************************************************
+	// config struct pointer for module reference.
 	apiCfg := &apiConfig{
 		databasePtr: dbQueries,
 		platform:    platform,
@@ -69,7 +70,7 @@ func main() {
 	//call the custom handler function if a http request is made to /healthz
 	serverMux.HandleFunc("GET /api/healthz", healthz)
 
-	//call the config method functions if an http request is made to /metrics or /reset
+	//call the config method functions if an http request is made to /metrics or /reset etc.
 	serverMux.HandleFunc("GET /admin/metrics", apiCfg.metrics)
 	serverMux.HandleFunc("POST /admin/reset", apiCfg.reset)
 	serverMux.HandleFunc("POST /api/validate_chirp", handlerChirpsValidate)
@@ -80,6 +81,7 @@ func main() {
 	serverMux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.handlerGetChirpByID)
 	serverMux.HandleFunc("POST /api/refresh", apiCfg.handlerRefreshJWT)
 	serverMux.HandleFunc("POST /api/revoke", apiCfg.handlerRevokeRefreshToken)
+	serverMux.HandleFunc("PUT /api/users", apiCfg.handlerUpdateUser)
 
 	// Serve files from current directory.
 	fileServer := http.FileServer(http.Dir("."))

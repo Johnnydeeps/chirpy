@@ -16,3 +16,9 @@ delete from users;
 select *
 from users
 where email = $1;
+
+-- name: UpdateUserHashedPasswordOrEmail :one
+update users
+set hashed_password = $1, email = $2, updated_at =$3
+where id = $4
+RETURNING *;
