@@ -82,6 +82,7 @@ func main() {
 	serverMux.HandleFunc("POST /api/refresh", apiCfg.handlerRefreshJWT)
 	serverMux.HandleFunc("POST /api/revoke", apiCfg.handlerRevokeRefreshToken)
 	serverMux.HandleFunc("PUT /api/users", apiCfg.handlerUpdateUser)
+	serverMux.HandleFunc("DELETE /api/chirps/{chirpID}", apiCfg.handlerDeleteChirp)
 
 	// Serve files from current directory.
 	fileServer := http.FileServer(http.Dir("."))
