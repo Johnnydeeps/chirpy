@@ -4,12 +4,15 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"sort"
 
 	"github.com/google/uuid"
 )
 
 func (configPtr *apiConfig) handlerGetAllChirps(response http.ResponseWriter, request *http.Request) {
 	authorIDString := request.URL.Query().Get("author_id")
+	sortIDString := request.URL.Query().Get("sort")
+
 	if authorIDString == "" {
 
 		chirps, err := configPtr.databasePtr.GetAllChirps(request.Context())
@@ -28,7 +31,17 @@ func (configPtr *apiConfig) handlerGetAllChirps(response http.ResponseWriter, re
 				UserID:    chirp.UserID,
 			})
 		}
+		// sort to DESC/descending order using slice in memory rather than writing a new SQL query.
+		// db retrieval queires (ie. GetAllChirps or GetChirpsByUser) return ASC/ascending sorted
+		// result by default.
+		if sortIDString == "desc" {
+			sort.Slice(chirpsJSON,
+				func(i, j int) bool { return chirpsJSON[i].CreatedAt.After(chirpsJSON[j].CreatedAt) })
+			respondWithJSON(response, 200, chirpsJSON)
+			return
+		}
 		respondWithJSON(response, 200, chirpsJSON)
+		return
 	}
 
 	requestUserID, err := uuid.Parse(authorIDString)
@@ -55,6 +68,15 @@ func (configPtr *apiConfig) handlerGetAllChirps(response http.ResponseWriter, re
 			Body:      chirp.Body,
 			UserID:    chirp.UserID,
 		})
+	}
+	// sort to DESC/descending order using slice in memory rather than writing a new SQL query.
+	// db retrieval queires (ie. GetAllChirps or GetChirpsByUser) return ASC/ascending sorted
+	// result by default.
+	if sortIDString == "desc" {
+		sort.Slice(chirpsJSON,
+			func(i, j int) bool { return chirpsJSON[i].CreatedAt.After(chirpsJSON[j].CreatedAt) })
+		respondWithJSON(response, 200, chirpsJSON)
+		return
 	}
 	respondWithJSON(response, 200, chirpsJSON)
 
